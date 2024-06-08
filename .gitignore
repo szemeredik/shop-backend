@@ -1,0 +1,3 @@
+product-service/node_modules
+product-service/.serverless
+product-service/package-lock.json
