@@ -12,9 +12,19 @@ functions:
       - http:
           path: products
           method: get
+          cors: true
   getProductsById:
     handler: handler.getProductsById
     events:
       - http:
           path: products/{productId}
           method: get
+          cors: true
+
+package:
+  exclude:
+    - node_modules/**
+    - .git/**
+    - .vscode/**
+    - tests/**
+    - package-lock.json
