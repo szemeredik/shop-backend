@@ -4,6 +4,21 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: eu-central-1
+  environment:
+    PRODUCTS_TABLE: products
+    STOCK_TABLE: stock
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PRODUCTS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STOCK_TABLE}"
 
 functions:
   getProductsList:
@@ -22,9 +37,34 @@ functions:
           cors: true
 
 package:
+  individually: true
+  excludeDevDependencies: false
   exclude:
-    - node_modules/**
-    - .git/**
-    - .vscode/**
-    - tests/**
-    - package-lock.json
+    - node_modules/** !node_modules/aws-sdk/**
+
+resources:
+  Resources:
+    ProductsDynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.PRODUCTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+    StockDynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.STOCK_TABLE}
+        AttributeDefinitions:
+          - AttributeName: product_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: product_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

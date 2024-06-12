@@ -1,89 +1,97 @@
-"use strict";
+const AWS = require("aws-sdk");
+const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-const products = [
-  {
-    count: 5,
-    description: "Short Product Description1 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80aa",
-    price: 3.5,
-    title: "ProductOne Updated",
-  },
-  {
-    count: 10,
-    description: "Short Product Description3 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a0",
-    price: 12,
-    title: "ProductNew Updated",
-  },
-  {
-    count: 8,
-    description: "Short Product Description2 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a2",
-    price: 25,
-    title: "ProductTop Updated",
-  },
-  {
-    count: 14,
-    description: "Short Product Description7 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a1",
-    price: 18,
-    title: "ProductTitle Updated",
-  },
-  {
-    count: 9,
-    description: "Short Product Description2 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a3",
-    price: 28,
-    title: "Product Updated",
-  },
-  {
-    count: 11,
-    description: "Short Product Description4 updated",
-    id: "8567ec4b-b10c-48c5-9445-fc73348a80a1",
-    price: 18,
-    title: "ProductTest Updated",
-  },
-];
+const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE;
+const STOCK_TABLE = process.env.STOCK_TABLE;
 
 module.exports.getProductsList = async (event) => {
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
-    },
-    body: JSON.stringify(products),
-  };
-};
+  try {
+    const productsData = await dynamodb
+      .scan({ TableName: PRODUCTS_TABLE })
+      .promise();
+    const products = productsData.Items;
 
-module.exports.getProductsById = async (event) => {
-  const { id } = event.pathParameters;
+    const stockData = await dynamodb.scan({ TableName: STOCK_TABLE }).promise();
+    const stocks = stockData.Items;
 
-  const product = products.find((p) => p.id === id);
+    const mergedData = products.map((product) => {
+      const stock = stocks.find((s) => s.product_id === product.id);
+      return {
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        count: stock ? stock.count : 0,
+      };
+    });
 
-  if (!product) {
     return {
-      statusCode: 404,
+      statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "GET,OPTIONS",
       },
-      body: JSON.stringify({ message: "Product not found" }),
+      body: JSON.stringify(mergedData),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
     };
   }
-
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
-    },
-    body: JSON.stringify(product),
+};
+module.exports.getProductsById = async (event) => {
+  const { id } = event.pathParameters;
+  const params = {
+    TableName: PRODUCTS_TABLE,
+    Key: { id },
   };
+
+  try {
+    const { Item } = await dynamodb.get(params).promise();
+    if (!Item) {
+      return {
+        statusCode: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers":
+            "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+          "Access-Control-Allow-Methods": "GET,OPTIONS",
+        },
+        body: JSON.stringify({ message: "Product not found" }),
+      };
+    }
+
+    // Fetch stock details
+    const stockParams = {
+      TableName: STOCK_TABLE,
+      Key: { product_id: id },
+    };
+    const stockResult = await dynamodb.get(stockParams).promise();
+    const product = {
+      id: Item.id,
+      title: Item.title,
+      description: Item.description,
+      price: Item.price,
+      count: stockResult.Item ? stockResult.Item.count : 0,
+    };
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers":
+          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "GET,OPTIONS",
+      },
+      body: JSON.stringify(product),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
 };

@@ -18,7 +18,7 @@ async function createProduct(product) {
       id: productId,
       title: product.title,
       description: product.description,
-      price: Math.floor(product.price * 100), // Convert to integer for price in cents
+      price: Math.floor(product.price),
     },
   };
 
