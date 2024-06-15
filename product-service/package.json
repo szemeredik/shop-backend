@@ -8,9 +8,9 @@
     "deploy": "serverless deploy"
   },
   "keywords": [],
-  "author": "",
+  "author": "Krisztian Szemeredi",
   "license": "ISC",
-  "description": "",
+  "description": "hometask for practising AWS cloud services",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.598.0",
     "@aws-sdk/lib-dynamodb": "^3.598.0",

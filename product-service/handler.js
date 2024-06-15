@@ -1,9 +1,11 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
   DynamoDBDocumentClient,
   ScanCommand,
   GetCommand,
-} from "@aws-sdk/lib-dynamodb";
+  PutCommand,
+} = require("@aws-sdk/lib-dynamodb");
+const { v4: uuidv4 } = require("uuid");
 
 const ddbClient = new DynamoDBClient({ region: "eu-central-1" });
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -11,7 +13,7 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE;
 const STOCK_TABLE = process.env.STOCK_TABLE;
 
-export const getProductsList = async (event) => {
+const getProductsList = async (event) => {
   try {
     const productsData = await docClient.send(
       new ScanCommand({ TableName: PRODUCTS_TABLE })
@@ -52,7 +54,7 @@ export const getProductsList = async (event) => {
   }
 };
 
-export const getProductsById = async (event) => {
+const getProductsById = async (event) => {
   const { productId } = event.pathParameters;
   const params = {
     TableName: PRODUCTS_TABLE,
@@ -64,12 +66,6 @@ export const getProductsById = async (event) => {
     if (!Item) {
       return {
         statusCode: 404,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers":
-            "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-          "Access-Control-Allow-Methods": "GET,OPTIONS",
-        },
         body: JSON.stringify({ message: "Product not found" }),
       };
     }
@@ -103,4 +99,48 @@ export const getProductsById = async (event) => {
       body: JSON.stringify({ message: err.message }),
     };
   }
+};
+
+const createProduct = async (event) => {
+  const { title, description, price, count } = JSON.parse(event.body);
+  const id = uuidv4();
+
+  const productParams = {
+    TableName: PRODUCTS_TABLE,
+    Item: {
+      id,
+      title,
+      description,
+      price,
+    },
+  };
+
+  const stockParams = {
+    TableName: STOCK_TABLE,
+    Item: {
+      product_id: id,
+      count,
+    },
+  };
+
+  try {
+    await docClient.send(new PutCommand(productParams));
+    await docClient.send(new PutCommand(stockParams));
+
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ id }),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
+};
+
+module.exports = {
+  getProductsList,
+  getProductsById,
+  createProduct,
 };

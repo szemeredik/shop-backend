@@ -35,9 +35,30 @@ functions:
           path: products/{productId}
           method: get
           cors: true
+  createProduct:
+    handler: handler.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
 
 package:
   individually: true
-  excludeDevDependencies: false
   exclude:
-    - node_modules/**
+    - "**"
+  include:
+    - handler.js
+    - node_modules/uuid/**
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ["aws-sdk"]
+    target: "node20"
+    define:
+      "require.resolve": undefined
+    platform: "node"
+    concurrency: 10
