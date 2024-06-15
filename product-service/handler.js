@@ -1,17 +1,26 @@
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  ScanCommand,
+  GetCommand,
+} from "@aws-sdk/lib-dynamodb";
+
+const ddbClient = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE;
 const STOCK_TABLE = process.env.STOCK_TABLE;
 
-module.exports.getProductsList = async (event) => {
+export const getProductsList = async (event) => {
   try {
-    const productsData = await dynamodb
-      .scan({ TableName: PRODUCTS_TABLE })
-      .promise();
+    const productsData = await docClient.send(
+      new ScanCommand({ TableName: PRODUCTS_TABLE })
+    );
     const products = productsData.Items;
 
-    const stockData = await dynamodb.scan({ TableName: STOCK_TABLE }).promise();
+    const stockData = await docClient.send(
+      new ScanCommand({ TableName: STOCK_TABLE })
+    );
     const stocks = stockData.Items;
 
     const mergedData = products.map((product) => {
@@ -42,15 +51,16 @@ module.exports.getProductsList = async (event) => {
     };
   }
 };
-module.exports.getProductsById = async (event) => {
-  const { id } = event.pathParameters;
+
+export const getProductsById = async (event) => {
+  const { productId } = event.pathParameters;
   const params = {
     TableName: PRODUCTS_TABLE,
-    Key: { id },
+    Key: { id: productId },
   };
 
   try {
-    const { Item } = await dynamodb.get(params).promise();
+    const { Item } = await docClient.send(new GetCommand(params));
     if (!Item) {
       return {
         statusCode: 404,
@@ -64,12 +74,11 @@ module.exports.getProductsById = async (event) => {
       };
     }
 
-    // Fetch stock details
     const stockParams = {
       TableName: STOCK_TABLE,
-      Key: { product_id: id },
+      Key: { product_id: productId },
     };
-    const stockResult = await dynamodb.get(stockParams).promise();
+    const stockResult = await docClient.send(new GetCommand(stockParams));
     const product = {
       id: Item.id,
       title: Item.title,

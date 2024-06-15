@@ -40,31 +40,4 @@ package:
   individually: true
   excludeDevDependencies: false
   exclude:
-    - node_modules/** !node_modules/aws-sdk/**
-
-resources:
-  Resources:
-    ProductsDynamoDbTable:
-      Type: "AWS::DynamoDB::Table"
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.PRODUCTS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-    StockDynamoDbTable:
-      Type: "AWS::DynamoDB::Table"
-      DeletionPolicy: Retain
-      Properties:
-        TableName: ${self:provider.environment.STOCK_TABLE}
-        AttributeDefinitions:
-          - AttributeName: product_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: product_id
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
+    - node_modules/**
