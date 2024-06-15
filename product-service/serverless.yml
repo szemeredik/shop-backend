@@ -4,27 +4,62 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: eu-central-1
+  environment:
+    PRODUCTS_TABLE: products
+    STOCK_TABLE: stock
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PRODUCTS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STOCK_TABLE}"
 
 functions:
   getProductsList:
-    handler: handler.getProductsList
+    handler: handlers/getProductsList.getProductsList
     events:
       - http:
           path: products
           method: get
           cors: true
   getProductsById:
-    handler: handler.getProductsById
+    handler: handlers/getProductsById.getProductsById
     events:
       - http:
           path: products/{productId}
           method: get
           cors: true
+  createProduct:
+    handler: handlers/createProduct.createProduct
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
 
 package:
+  individually: true
   exclude:
-    - node_modules/**
-    - .git/**
-    - .vscode/**
-    - tests/**
-    - package-lock.json
+    - "**"
+  include:
+    - handler.js
+    - handlers/**
+    - node_modules/uuid/**
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ["aws-sdk"]
+    target: "node20"
+    define:
+      "require.resolve": undefined
+    platform: "node"
+    concurrency: 10

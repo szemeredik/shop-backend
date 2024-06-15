@@ -1,89 +1,157 @@
-"use strict";
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBDocumentClient,
+  ScanCommand,
+  GetCommand,
+  PutCommand,
+} = require("@aws-sdk/lib-dynamodb");
+const { v4: uuidv4 } = require("uuid");
 
-const products = [
-  {
-    count: 5,
-    description: "Short Product Description1 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80aa",
-    price: 3.5,
-    title: "ProductOne Updated",
-  },
-  {
-    count: 10,
-    description: "Short Product Description3 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a0",
-    price: 12,
-    title: "ProductNew Updated",
-  },
-  {
-    count: 8,
-    description: "Short Product Description2 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a2",
-    price: 25,
-    title: "ProductTop Updated",
-  },
-  {
-    count: 14,
-    description: "Short Product Description7 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a1",
-    price: 18,
-    title: "ProductTitle Updated",
-  },
-  {
-    count: 9,
-    description: "Short Product Description2 updated",
-    id: "8567ec4b-b10c-48c5-9345-fc73c48a80a3",
-    price: 28,
-    title: "Product Updated",
-  },
-  {
-    count: 11,
-    description: "Short Product Description4 updated",
-    id: "8567ec4b-b10c-48c5-9445-fc73348a80a1",
-    price: 18,
-    title: "ProductTest Updated",
-  },
-];
+const ddbClient = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(ddbClient);
 
-module.exports.getProductsList = async (event) => {
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
-    },
-    body: JSON.stringify(products),
-  };
-};
+const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE;
+const STOCK_TABLE = process.env.STOCK_TABLE;
 
-module.exports.getProductsById = async (event) => {
-  const { id } = event.pathParameters;
+const getProductsList = async (event) => {
+  try {
+    const productsData = await docClient.send(
+      new ScanCommand({ TableName: PRODUCTS_TABLE })
+    );
+    const products = productsData.Items;
 
-  const product = products.find((p) => p.id === id);
+    const stockData = await docClient.send(
+      new ScanCommand({ TableName: STOCK_TABLE })
+    );
+    const stocks = stockData.Items;
 
-  if (!product) {
+    const mergedData = products.map((product) => {
+      const stock = stocks.find((s) => s.product_id === product.id);
+      return {
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        count: stock ? stock.count : 0,
+      };
+    });
+
     return {
-      statusCode: 404,
+      statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "GET,OPTIONS",
       },
-      body: JSON.stringify({ message: "Product not found" }),
+      body: JSON.stringify(mergedData),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
+};
+
+const getProductsById = async (event) => {
+  const { productId } = event.pathParameters;
+  const params = {
+    TableName: PRODUCTS_TABLE,
+    Key: { id: productId },
+  };
+
+  try {
+    const { Item } = await docClient.send(new GetCommand(params));
+    if (!Item) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: "Product not found" }),
+      };
+    }
+
+    const stockParams = {
+      TableName: STOCK_TABLE,
+      Key: { product_id: productId },
+    };
+    const stockResult = await docClient.send(new GetCommand(stockParams));
+    const product = {
+      id: Item.id,
+      title: Item.title,
+      description: Item.description,
+      price: Item.price,
+      count: stockResult.Item ? stockResult.Item.count : 0,
+    };
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers":
+          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "GET,OPTIONS",
+      },
+      body: JSON.stringify(product),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
+};
+
+const createProduct = async (event) => {
+  console.log("Received event:", JSON.stringify(event, null, 2));
+
+  const body = JSON.parse(event.body);
+
+  // Validation
+  if (!body.title || !body.description || !body.price || !body.count) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: "Invalid product data" }),
     };
   }
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-      "Access-Control-Allow-Methods": "GET,OPTIONS",
+  const productId = uuidv4();
+
+  const productParams = {
+    TableName: PRODUCTS_TABLE,
+    Item: {
+      id: productId,
+      title: body.title,
+      description: body.description,
+      price: body.price,
     },
-    body: JSON.stringify(product),
   };
+
+  const stockParams = {
+    TableName: STOCK_TABLE,
+    Item: {
+      product_id: productId,
+      count: body.count,
+    },
+  };
+
+  try {
+    await docClient.send(new PutCommand(productParams));
+    await docClient.send(new PutCommand(stockParams));
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ message: "Product created successfully" }),
+    };
+  } catch (err) {
+    console.error("Error creating product:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: "Internal server error" }),
+    };
+  }
+};
+
+module.exports = {
+  getProductsList,
+  getProductsById,
+  createProduct,
 };

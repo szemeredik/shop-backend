@@ -1,15 +1,20 @@
 {
   "name": "product-service",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "serverless deploy"
   },
   "keywords": [],
-  "author": "",
+  "author": "Krisztian Szemeredi",
   "license": "ISC",
-  "description": "",
+  "description": "hometask for practising AWS cloud services",
   "dependencies": {
-    "aws-sdk": "^2.1637.0"
+    "@aws-sdk/client-dynamodb": "^3.598.0",
+    "@aws-sdk/lib-dynamodb": "^3.598.0",
+    "serverless": "^4.1.0",
+    "uuid": "^10.0.0"
   }
 }
