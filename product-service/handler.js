@@ -102,39 +102,50 @@ const getProductsById = async (event) => {
 };
 
 const createProduct = async (event) => {
-  const { title, description, price, count } = JSON.parse(event.body);
-  const id = uuidv4();
+  console.log("Received event:", JSON.stringify(event, null, 2));
+
+  const body = JSON.parse(event.body);
+
+  // Validation
+  if (!body.title || !body.description || !body.price || !body.count) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: "Invalid product data" }),
+    };
+  }
+
+  const productId = uuidv4();
 
   const productParams = {
     TableName: PRODUCTS_TABLE,
     Item: {
-      id,
-      title,
-      description,
-      price,
+      id: productId,
+      title: body.title,
+      description: body.description,
+      price: body.price,
     },
   };
 
   const stockParams = {
     TableName: STOCK_TABLE,
     Item: {
-      product_id: id,
-      count,
+      product_id: productId,
+      count: body.count,
     },
   };
 
   try {
     await docClient.send(new PutCommand(productParams));
     await docClient.send(new PutCommand(stockParams));
-
     return {
       statusCode: 201,
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ message: "Product created successfully" }),
     };
   } catch (err) {
+    console.error("Error creating product:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: err.message }),
+      body: JSON.stringify({ message: "Internal server error" }),
     };
   }
 };

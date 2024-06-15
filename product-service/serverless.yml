@@ -22,21 +22,21 @@ provider:
 
 functions:
   getProductsList:
-    handler: handler.getProductsList
+    handler: handlers/getProductsList.getProductsList
     events:
       - http:
           path: products
           method: get
           cors: true
   getProductsById:
-    handler: handler.getProductsById
+    handler: handlers/getProductsById.getProductsById
     events:
       - http:
           path: products/{productId}
           method: get
           cors: true
   createProduct:
-    handler: handler.createProduct
+    handler: handlers/createProduct.createProduct
     events:
       - http:
           path: products
@@ -49,6 +49,7 @@ package:
     - "**"
   include:
     - handler.js
+    - handlers/**
     - node_modules/uuid/**
 
 custom:
