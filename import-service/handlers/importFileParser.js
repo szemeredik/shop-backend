@@ -1,14 +1,14 @@
-import {
+const {
   S3Client,
   GetObjectCommand,
   CopyObjectCommand,
   DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-import csv from "csv-parser";
+} = require("@aws-sdk/client-s3");
+const csv = require("csv-parser");
 
 const s3Client = new S3Client({ region: process.env.MY_AWS_REGION });
 
-export const importFileParser = async (event) => {
+const importFileParser = async (event) => {
   try {
     for (const record of event.Records) {
       const bucket = record.s3.bucket.name;
@@ -19,9 +19,8 @@ export const importFileParser = async (event) => {
         Key: key,
       };
 
-      const s3Stream = s3Client
-        .send(new GetObjectCommand(getObjectParams))
-        .Body.pipe(csv());
+      const data = await s3Client.send(new GetObjectCommand(getObjectParams));
+      const s3Stream = data.Body.pipe(csv({ separator: ";" }));
 
       s3Stream.on("data", (data) => {
         console.log("Parsed data:", data);
@@ -51,3 +50,5 @@ export const importFileParser = async (event) => {
     throw new Error("Error parsing file");
   }
 };
+
+module.exports = { importFileParser };
