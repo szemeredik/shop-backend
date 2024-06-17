@@ -26,28 +26,53 @@ const importFileParser = async (event) => {
         console.log("Parsed data:", data);
       });
 
-      s3Stream.on("end", async () => {
-        const copyParams = {
-          Bucket: bucket,
-          CopySource: `${bucket}/${key}`,
-          Key: key.replace("uploaded", "parsed"),
-        };
+      await new Promise((resolve, reject) => {
+        s3Stream.on("end", async () => {
+          try {
+            console.log(
+              `Processing complete, moving ${key} to 'parsed' folder.`
+            );
 
-        await s3Client.send(new CopyObjectCommand(copyParams));
+            const copyParams = {
+              Bucket: bucket,
+              CopySource: `${bucket}/${key}`,
+              Key: key.replace("uploaded", "parsed"),
+            };
 
-        const deleteParams = {
-          Bucket: bucket,
-          Key: key,
-        };
+            const copyResult = await s3Client.send(
+              new CopyObjectCommand(copyParams)
+            );
+            console.log("Copy result:", copyResult);
 
-        await s3Client.send(new DeleteObjectCommand(deleteParams));
+            const deleteParams = {
+              Bucket: bucket,
+              Key: key,
+            };
 
-        console.log(`Moved ${key} to parsed folder and deleted from uploaded`);
+            const deleteResult = await s3Client.send(
+              new DeleteObjectCommand(deleteParams)
+            );
+            console.log("Delete result:", deleteResult);
+
+            console.log(
+              `Moved ${key} to parsed folder and deleted from uploaded`
+            );
+            resolve();
+          } catch (error) {
+            console.error("Error during file move:", error);
+            reject(error);
+          }
+        });
+
+        s3Stream.on("error", (error) => {
+          console.error("Stream error:", error);
+          reject(error);
+        });
       });
     }
   } catch (error) {
-    console.error("Error parsing file", error);
-    throw new Error("Error parsing file");
+    console.error("Error handling the file:", error);
+    throw new Error("Failed to process file");
   }
 };
 
