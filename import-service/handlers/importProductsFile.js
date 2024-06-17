@@ -4,6 +4,18 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const s3Client = new S3Client({ region: process.env.MY_AWS_REGION });
 
 module.exports.importProductsFile = async (event) => {
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+      },
+      body: "",
+    };
+  }
+
   try {
     const { name } = event.queryStringParameters;
     const bucketName = process.env.BUCKET_NAME;
@@ -25,7 +37,7 @@ module.exports.importProductsFile = async (event) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "GET",
+        "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
       },
       body: JSON.stringify({ url }),
     };
@@ -34,6 +46,11 @@ module.exports.importProductsFile = async (event) => {
 
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
+      },
       body: JSON.stringify({ message: "Internal server error" }),
     };
   }

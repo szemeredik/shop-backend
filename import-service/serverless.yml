@@ -13,6 +13,7 @@ provider:
         - s3:PutObject
         - s3:GetObject
         - s3:ListBucket
+        - s3:DeleteObject
       Resource:
         - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
         - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}
@@ -24,11 +25,21 @@ functions:
       - http:
           path: import
           method: get
-          cors: true
-          request:
-            parameters:
-              querystrings:
-                name: true
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+            allowCredentials: false
+      - http:
+          path: import
+          method: options
+          cors:
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+            allowCredentials: false
 
   importFileParser:
     handler: handlers/importFileParser.importFileParser
