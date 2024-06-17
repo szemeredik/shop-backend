@@ -1,3 +1,5 @@
 product-service/node_modules
 product-service/.serverless
 product-service/package-lock.json
+import-service/node_modules
+import-service/.serverless
