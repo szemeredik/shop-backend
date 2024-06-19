@@ -4,9 +4,12 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: eu-central-1
+  stage: dev
   environment:
     BUCKET_NAME: bucket-for-products
     MY_AWS_REGION: ${opt:region, 'eu-central-1'}
+    SQS_QUEUE_URL: !ImportValue product-service-dev-SQSQueueURL
+
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -52,8 +55,20 @@ functions:
             - suffix: .csv
 
 package:
+  individually: true
   exclude:
-    - node_modules/**
-    - "!node_modules/csv-parser/**"
-    - "!node_modules/@aws-sdk/**"
-    - "!node_modules/@types/**"
+    - "**"
+  include:
+    - handlers/**
+    - node_modules/@smithy/**
+    - node_modules/uuid/**
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ["aws-sdk"]
+    target: "node20"
+    platform: "node"
+    concurrency: 10
