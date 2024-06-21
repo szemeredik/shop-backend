@@ -92,6 +92,14 @@ resources:
         Ref: catalogItemsQueue
       Export:
         Name: product-service-dev-SQSQueueURL
+    SQSQueueARN:
+      Description: "ARN of the SQS Queue"
+      Value:
+        Fn::GetAtt:
+          - catalogItemsQueue
+          - Arn
+      Export:
+        Name: product-service-dev-SQSQueueARN
 
 package:
   individually: true
