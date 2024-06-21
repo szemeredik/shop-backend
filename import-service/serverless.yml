@@ -28,21 +28,11 @@ functions:
       - http:
           path: import
           method: get
-          cors:
-            origins:
-              - "*"
-            headers:
-              - Content-Type
-            allowCredentials: false
+          cors: true
       - http:
           path: import
           method: options
-          cors:
-            origins:
-              - "*"
-            headers:
-              - Content-Type
-            allowCredentials: false
+          cors: true
 
   importFileParser:
     handler: handlers/importFileParser.importFileParser
@@ -62,6 +52,7 @@ package:
     - handlers/**
     - node_modules/@smithy/**
     - node_modules/uuid/**
+    - node_modules/csv-parser/**
 
 custom:
   esbuild:
