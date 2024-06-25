@@ -20,6 +20,10 @@ provider:
       Resource:
         - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
         - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource: !ImportValue product-service-dev-SQSQueueARN
 
 functions:
   importProductsFile:

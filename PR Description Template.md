@@ -1,35 +1,18 @@
-### What was done?
+# Pull Request (PR) Description
 
-1. **Task 5.1:**
+## What was done?
 
-   - Created a new service called `import-service`.
-   - Created and configured an S3 bucket with an `uploaded` folder.
+- [x] Task 6.1: Lambda function `catalogBatchProcess` was implemented to process records from the `catalogItemsQueue`.
+- [x] Task 6.2: `importFileParser` Lambda was updated to send each parsed CSV record to the SQS queue.
+- [x] Task 6.3: SNS topic `createProductTopic` and email subscription were created.
+- [x] Task 6.4: All changes were committed to a separate branch `task-6`.
 
-2. **Task 5.2:**
+## Links
 
-   - Created the `importProductsFile` lambda function.
-   - Implemented logic to create a signed URL for uploading files.
-   - Successfully tested the signed URL generation and file upload to the S3 bucket.
+- **Product Service API:** https://1k2a51u50g.execute-api.eu-central-1.amazonaws.com/dev
+- **Import Service API:** https://iof9qtnvlj.execute-api.eu-central-1.amazonaws.com/dev
 
-3. **Task 5.3:**
-   - Created the `importFileParser` lambda function.
-   - Configured it to trigger on S3 events for the `uploaded` folder.
-   - Implemented logic to parse CSV files and move them from the `uploaded` folder to the `parsed` folder.
-   - Successfully tested file parsing and movement.
+- **Frontend Repository:** https://github.com/szemeredik/shop-angular-cloudfront/tree/task-5
+- **Frontend CloudFront URL:** https://d305jm08ln0fde.cloudfront.net
 
-### API Endpoints:
-
-- **GET** /import: Generates a signed URL for uploading files.
-
-[https://p2th1l7x55.execute-api.eu-central-1.amazonaws.com/dev/import?name=products.csv](https://p2th1l7x55.execute-api.eu-central-1.amazonaws.com/dev/import?name=products.csv)
-
-### Links:
-
-- **CloudFront URL:** [https://d305jm08ln0fde.cloudfront.net/](https://d305jm08ln0fde.cloudfront.net/)
-- **Frontend Repository:** [https://github.com/szemeredik/shop-angular-cloudfront/tree/task-5](https://github.com/szemeredik/shop-angular-cloudfront/tree/task-5)
-- **Backend Repository:** [https://github.com/szemeredik/shop-backend/tree/task-5](https://github.com/szemeredik/shop-backend/tree/task-5)
-
-### Notes:
-
-- Async/await is used in lambda functions.
-- Parsed CSV files are moved to the `parsed` folder after processing.
+- **template csv for testing purposes:** https://github.com/szemeredik/shop-backend/blob/task-6/import-service/products1.csv

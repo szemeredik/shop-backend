@@ -6,6 +6,10 @@ const {
 } = require("@aws-sdk/client-s3");
 const csv = require("csv-parser");
 
+const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
+const sqsClient = new SQSClient({ region: process.env.MY_AWS_REGION });
+const queueUrl = process.env.SQS_QUEUE_URL;
+
 const s3Client = new S3Client({ region: process.env.MY_AWS_REGION });
 
 const importFileParser = async (event) => {
@@ -22,46 +26,43 @@ const importFileParser = async (event) => {
       const data = await s3Client.send(new GetObjectCommand(getObjectParams));
       const s3Stream = data.Body.pipe(csv({ separator: ";" }));
 
-      s3Stream.on("data", (data) => {
+      s3Stream.on("data", async (data) => {
         console.log("Parsed data:", data);
+        try {
+          const sendMessageParams = {
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify(data),
+          };
+          const sendResult = await sqsClient.send(
+            new SendMessageCommand(sendMessageParams)
+          );
+          console.log("Message sent to SQS:", sendResult);
+        } catch (error) {
+          console.error("Failed to send message to SQS:", error);
+        }
       });
 
       await new Promise((resolve, reject) => {
         s3Stream.on("end", async () => {
-          try {
-            console.log(
-              `Processing complete, moving ${key} to 'parsed' folder.`
-            );
+          console.log(`Processing complete, moving ${key} to 'parsed' folder.`);
 
-            const copyParams = {
-              Bucket: bucket,
-              CopySource: `${bucket}/${key}`,
-              Key: key.replace("uploaded", "parsed"),
-            };
+          const copyParams = {
+            Bucket: bucket,
+            CopySource: `${bucket}/${key}`,
+            Key: key.replace("uploaded", "parsed"),
+          };
+          await s3Client.send(new CopyObjectCommand(copyParams));
 
-            const copyResult = await s3Client.send(
-              new CopyObjectCommand(copyParams)
-            );
-            console.log("Copy result:", copyResult);
+          const deleteParams = {
+            Bucket: bucket,
+            Key: key,
+          };
+          await s3Client.send(new DeleteObjectCommand(deleteParams));
 
-            const deleteParams = {
-              Bucket: bucket,
-              Key: key,
-            };
-
-            const deleteResult = await s3Client.send(
-              new DeleteObjectCommand(deleteParams)
-            );
-            console.log("Delete result:", deleteResult);
-
-            console.log(
-              `Moved ${key} to parsed folder and deleted from uploaded`
-            );
-            resolve();
-          } catch (error) {
-            console.error("Error during file move:", error);
-            reject(error);
-          }
+          console.log(
+            `Moved ${key} to parsed folder and deleted from uploaded`
+          );
+          resolve();
         });
 
         s3Stream.on("error", (error) => {

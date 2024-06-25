@@ -17,6 +17,10 @@ module.exports.createProduct = async (event) => {
   if (!body.title || !body.description || !body.price || !body.count) {
     return {
       statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Allows requests from any origin
+        "Access-Control-Allow-Credentials": true, // Necessary for cookies, authorization headers with HTTPS if needed
+      },
       body: JSON.stringify({ message: "Invalid product data" }),
     };
   }
@@ -46,12 +50,20 @@ module.exports.createProduct = async (event) => {
     await docClient.send(new PutCommand(stockParams));
     return {
       statusCode: 201,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Allows requests from any origin
+        "Access-Control-Allow-Credentials": true, // Necessary for cookies, authorization headers with HTTPS if needed
+      },
       body: JSON.stringify({ message: "Product created successfully" }),
     };
   } catch (err) {
     console.error("Error creating product:", err);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Allows requests from any origin
+        "Access-Control-Allow-Credentials": true, // Necessary for cookies, authorization headers with HTTPS if needed
+      },
       body: JSON.stringify({ message: "Internal server error" }),
     };
   }
