@@ -4,9 +4,12 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: eu-central-1
+  stage: dev
   environment:
     PRODUCTS_TABLE: products
     STOCK_TABLE: stock
+    MY_AWS_REGION: eu-central-1
+    SNS_TOPIC_ARN: "arn:aws:sns:eu-central-1:533267428034:createProductTopic"
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -19,6 +22,19 @@ provider:
       Resource:
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PRODUCTS_TABLE}"
         - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.STOCK_TABLE}"
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+        - sqs:GetQueueAttributes
+      Resource:
+        - "arn:aws:sqs:${self:provider.region}:*:catalogItemsQueue"
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource:
+        - "arn:aws:sns:${self:provider.region}:*:createProductTopic"
 
 functions:
   getProductsList:
@@ -42,13 +58,46 @@ functions:
           path: products
           method: post
           cors: true
+  catalogBatchProcess:
+    handler: handlers/catalogBatchProcess.catalogBatchProcess
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - catalogItemsQueue
+              - Arn
+          batchSize: 5
+
+resources:
+  Resources:
+    catalogItemsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue
+    createProductTopic:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        TopicName: "createProductTopic"
+    ProductCreationEmailSubscription:
+      Type: "AWS::SNS::Subscription"
+      Properties:
+        TopicArn:
+          Ref: "createProductTopic"
+        Protocol: "email"
+        Endpoint: "szemeredik@gmail.com"
+  Outputs:
+    SQSQueueURL:
+      Description: "URL of the SQS Queue"
+      Value:
+        Ref: catalogItemsQueue
+      Export:
+        Name: product-service-dev-SQSQueueURL
 
 package:
   individually: true
   exclude:
     - "**"
   include:
-    - handler.js
     - handlers/**
     - node_modules/uuid/**
 

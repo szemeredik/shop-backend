@@ -1,0 +1,65 @@
+service: import-service
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-central-1
+  stage: dev
+  environment:
+    BUCKET_NAME: bucket-for-products
+    MY_AWS_REGION: ${opt:region, 'eu-central-1'}
+    SQS_QUEUE_URL: !ImportValue product-service-dev-SQSQueueURL
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+        - s3:ListBucket
+        - s3:DeleteObject
+      Resource:
+        - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
+        - arn:aws:s3:::${self:provider.environment.BUCKET_NAME}
+
+functions:
+  importProductsFile:
+    handler: handlers/importProductsFile.importProductsFile
+    events:
+      - http:
+          path: import
+          method: get
+          cors: true
+      - http:
+          path: import
+          method: options
+          cors: true
+
+  importFileParser:
+    handler: handlers/importFileParser.importFileParser
+    events:
+      - s3:
+          bucket: ${self:provider.environment.BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploaded/
+            - suffix: .csv
+
+package:
+  individually: true
+  exclude:
+    - "**"
+  include:
+    - handlers/**
+    - node_modules/@smithy/**
+    - node_modules/uuid/**
+    - node_modules/csv-parser/**
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ["aws-sdk"]
+    target: "node20"
+    platform: "node"
+    concurrency: 10
