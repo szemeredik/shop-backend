@@ -1,60 +1,39 @@
 const products = [
   {
     count: 5,
-    description: "Short Product Description1 updated",
+    description: "Short Product Description1",
     id: 1,
     price: 3.5,
-    title: "ProductOne DynamoDB Updated",
+    title: "ProductOne DynamoDB",
   },
   {
     count: 10,
-    description: "Short Product Description3 updated",
+    description: "Short Product Description2",
     id: 2,
     price: 12,
-    title: "ProductNew DynamoDB Updated",
+    title: "ProductNew DynamoDB",
   },
   {
     count: 8,
-    description: "Short Product Description2 updated",
+    description: "Short Product Description3",
     id: 3,
     price: 25,
-    title: "ProductTop DynamoDB Updated",
-  },
-  {
-    count: 14,
-    description: "Short Product Description7 updated",
-    id: 4,
-    price: 18,
-    title: "ProductTitle DynamoDB Updated",
-  },
-  {
-    count: 9,
-    description: "Short Product Description2 updated",
-    id: 5,
-    price: 28,
-    title: "Product DynamoDB Updated",
+    title: "ProductTop DynamoDB",
   },
   {
     count: 11,
-    description: "Short Product Description4 updated",
-    id: 6,
+    description: "Short Product Description4",
+    id: 4,
     price: 18,
-    title: "ProductTest DynamoDB Updated",
-  },
-  {
-    count: 4,
-    description: "Short Product Description1 updated",
-    id: 7,
-    price: 26,
-    title: "Product2 DynamoDB Updated",
+    title: "ProductTest DynamoDB",
   },
   {
     count: 6,
-    description: "Short Product Description7 updated",
-    id: 8,
+    description: "Short Product Description5",
+    id: 5,
     price: 17,
-    title: "ProductName DynamoDB Updated",
+    title: "ProductName DynamoDB",
   },
 ];
 
-module.exports = products;
+export default products;
