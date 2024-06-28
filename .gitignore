@@ -7,3 +7,4 @@ authorization-service/.env
 authorization-service/node_modules/
 authorization-service/.serverless/
 authorization-service/package-lock.json
+authorization-service/todo.md
