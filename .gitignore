@@ -3,3 +3,7 @@ product-service/.serverless
 product-service/package-lock.json
 import-service/node_modules
 import-service/.serverless
+authorization-service/.env
+authorization-service/node_modules/
+authorization-service/.serverless/
+authorization-service/package-lock.json
