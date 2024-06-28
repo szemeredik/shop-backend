@@ -3,13 +3,15 @@ const buffer = require("buffer");
 exports.basicAuthorizer = async (event, context, callback) => {
   if (!event.authorizationToken) {
     console.log("Unauthorized, Missing authorization token, returns 401");
-    return callback(null, "Unauthorized");
+    callback(null, generatePolicy("user", "Deny", event.methodArn)); // Denies all requests
+    return;
   }
 
   const tokenParts = event.authorizationToken.split(" ");
   if (tokenParts[0] !== "Basic" || tokenParts.length !== 2) {
     console.log("Unauthorized, Malformatted token, returns 401");
-    return callback(null, "Unauthorized");
+    callback(null, generatePolicy("user", "Deny", event.methodArn)); // Denies all requests
+    return;
   }
 
   const encodedCreds = tokenParts[1];
@@ -31,7 +33,7 @@ exports.basicAuthorizer = async (event, context, callback) => {
     callback(null, generatePolicy("user", "Allow", event.methodArn));
   } else {
     console.log("Unauthorized, Incorrect credentials, returns 403");
-    callback(null, "Unauthorized");
+    callback(null, generatePolicy("user", "Deny", event.methodArn)); // Denies all requests
   }
 };
 
