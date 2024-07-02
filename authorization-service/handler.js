@@ -1,6 +1,6 @@
 const buffer = require("buffer");
 
-exports.basicAuthorizer = async (event, context, callback) => {
+module.exports.basicAuthorizer = async (event, context, callback) => {
   if (!event.authorizationToken) {
     console.log("Unauthorized, Missing authorization token, returns 401");
     callback(null, generatePolicy("user", "Deny", event.methodArn)); // Denies all requests

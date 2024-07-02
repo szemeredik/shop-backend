@@ -67,29 +67,3 @@ custom:
     target: "node20"
     platform: "node"
     concurrency: 10
-
-resources:
-  Resources:
-    S3Bucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.bucketName}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedOrigins:
-                - "*"
-              AllowedHeaders:
-                - "*"
-              AllowedMethods:
-                - GET
-                - PUT
-                - POST
-                - DELETE
-                - HEAD
-              MaxAgeSeconds: 3000
-
-  Outputs:
-    BucketName:
-      Value: !Ref S3Bucket
-      Export:
-        Name: ${self:provider.stage}-BucketName
