@@ -16,6 +16,15 @@ functions:
     environment:
       szemeredik: ${env:szemeredik}
 
+resources:
+  Outputs:
+    BasicAuthorizerLambdaFunctionArn:
+      Description: "ARN of the Basic Authorizer Lambda Function"
+      Value:
+        Fn::GetAtt: [BasicAuthorizerLambdaFunction, Arn]
+      Export:
+        Name: ${self:provider.stage}-BasicAuthorizerLambdaFunctionArn
+
 package:
   individually: true
   exclude:
