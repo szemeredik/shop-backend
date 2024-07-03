@@ -33,6 +33,8 @@ functions:
           path: import
           method: get
           cors: true
+          authorizer:
+            arn: ${cf:authorization-service-dev.BasicAuthorizerLambdaFunctionArn}
       - http:
           path: import
           method: options

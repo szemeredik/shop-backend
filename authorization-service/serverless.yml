@@ -1,0 +1,43 @@
+useDotenv: true
+
+service: authorization-service
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-central-1
+  stage: dev
+  environment:
+    szemeredik: ${env:szemeredik}
+
+functions:
+  basicAuthorizer:
+    handler: handler.basicAuthorizer
+    environment:
+      szemeredik: ${env:szemeredik}
+
+resources:
+  Outputs:
+    BasicAuthorizerLambdaFunctionArn:
+      Description: "ARN of the Basic Authorizer Lambda Function"
+      Value:
+        Fn::GetAtt: [BasicAuthorizerLambdaFunction, Arn]
+      Export:
+        Name: ${self:provider.stage}-BasicAuthorizerLambdaFunctionArn
+
+package:
+  individually: true
+  exclude:
+    - "**"
+  include:
+    - handler.js
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: ["aws-sdk"]
+    target: "node20"
+    platform: "node"
+    concurrency: 10

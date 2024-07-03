@@ -1,18 +1,14 @@
-//populateTables.js
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { v4 as uuidv4 } from "uuid";
+import productsData from "./products.js"; // Ensure this file exports the products data correctly.
 
-const AWS = require("aws-sdk");
-const { v4: uuidv4 } = require("uuid");
-const productsData = require("./products");
-
-AWS.config.update({
-  region: "eu-central-1",
-});
-
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const client = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(client);
 
 async function createProduct(product) {
   const productId = uuidv4(); // Generate a new UUID for each product
-  const productData = {
+  const params = {
     TableName: "products",
     Item: {
       id: productId,
@@ -22,7 +18,7 @@ async function createProduct(product) {
     },
   };
 
-  await dynamodb.put(productData).promise();
+  await docClient.send(new PutCommand(params));
   return productId; // Return the new UUID for linking with stock
 }
 
@@ -35,7 +31,7 @@ async function addToStock(productId, count) {
     },
   };
 
-  await dynamodb.put(stockData).promise();
+  await docClient.send(new PutCommand(stockData));
 }
 
 async function populateData() {

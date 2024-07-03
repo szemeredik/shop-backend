@@ -9,7 +9,7 @@ module.exports.importProductsFile = async (event) => {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
         "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
       },
       body: "",
@@ -36,7 +36,7 @@ module.exports.importProductsFile = async (event) => {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
         "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
       },
       body: JSON.stringify({ url }),
@@ -48,7 +48,7 @@ module.exports.importProductsFile = async (event) => {
       statusCode: 500,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
         "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
       },
       body: JSON.stringify({ message: "Internal server error" }),
