@@ -1,4 +1,4 @@
-# PR Description: Task 7 - Implement Authorization Service
+# PR Description: Task 7 v2 - Implement Authorization Service
 
 ## Key Changes
 
@@ -22,8 +22,7 @@
 5. **Client Application Updates**
    - Sends `Authorization: Basic {token}` header for `/import`.
    - Retrieves the `authorization_token` from browser **localStorage**.
-   - During development, for temporary soulution, token is saved into **localStorage** just before it needs to be read out of it. If login page will be implemented, this solution can be deleted. The **localStorage** implementation in the frontend could be found here (line 21):
-     https://github.com/szemeredik/shop-angular-cloudfront/blob/task-7/src/app/admin/manage-products/manage-products.service.ts
+   - Extra button has been created on the Manage products page, its called "Pretend as Logged in". It saves the Token into localStorage. Without pressing it the CSV import is not working. It is a temporary soulution, only for development, for testing authorization.
 
 ## Testing and Validation
 
