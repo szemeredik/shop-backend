@@ -33,9 +33,30 @@
 ## Links
 
 - **Product Service API:** https://ryb23pa0hh.execute-api.eu-central-1.amazonaws.com/dev
-- **Import Service API:** https://oxzwcuqovf.execute-api.eu-central-1.amazonaws.com/dev
+- **Import Service API:** https://q120n6y0u4.execute-api.eu-central-1.amazonaws.com/dev
 
 - **Frontend Repository:** https://github.com/szemeredik/shop-angular-cloudfront/tree/task-7
 - **Frontend CloudFront URL:** https://d305jm08ln0fde.cloudfront.net
 
 - **template csv for testing purposes:** https://github.com/szemeredik/shop-backend/blob/task-6/import-service/products1.csv
+
+Amazon S3 / Buckets / bucket-for-products / Permissions / Cross-origin resource sharing (CORS)
+[
+{
+"AllowedHeaders": [
+"*"
+],
+"AllowedMethods": [
+"GET",
+"PUT",
+"POST",
+"DELETE",
+"HEAD"
+],
+"AllowedOrigins": [
+"*"
+],
+"ExposeHeaders": [],
+"MaxAgeSeconds": 3000
+}
+]
